@@ -89,19 +89,6 @@ cv::Mat tresholding(cv::Mat image, cv::Vec3b color){
     return p_img;
 }
 
-// // Wyznacza, w którym zbiorze jest dany element, 
-// // pozwalając na sprawdzenie, czy dwa elementy są w tym samym zbiorze.
-// uchar find(uchar x)  {
-//     uchar y = x;
-//     while (labels[y] != y)
-//         y = labels[y];
-//     while (labels[x] != x)  {
-//         uchar z = labels[x];
-//         labels[x] = y;
-//         x = z;
-//     }
-//     return y;
-// }
 std::vector<int> parent {0};
 
 int find (int x){
@@ -165,10 +152,8 @@ cv::Mat twoPass(cv::Mat mask, int& max_label){
 }
 
 
-cv::Mat labels;// = cv::Mat::ones(mask.rows, mask.cols, CV_8UC1)*background;
+cv::Mat labels;
 // depth-first-search
-// Visit all the cells reachable from the starting cell. 
-// Each cell will be marked with current_label
 void dfs(int x, int y, int current_label, const cv::Mat& m) {
     // direction vectors
     const int dx[] = {+1, 0, -1, 0};
@@ -219,10 +204,8 @@ getAllObjects(cv::Mat labels, int no_labels){
     // from 1: ignore background
     for (int i = 1; i<no_labels; ++i){
         cv::Mat obj = getObject(labels, i);
-        if (pole(obj) > 50)    // TODO: fix
-        // if (pole(obj) > 10)
+        if (pole(obj) > 50)    
             v.push_back(obj);
-        // v.push_back(obj);
     }
     return v;
 }
@@ -232,10 +215,7 @@ bool isMetroYellowBackground(const cv::Mat& object){
     double i=0, j=0;
     center(m->m00, m->m10, m->m01, i, j);
     double M7 = niezmiennikM7(i, j, m);
-    // double M1 = niezmiennikM1(i, j, m);
     float mal = ksztaltMalinowskiej(pole(object), obwod(object));
-    // std::cout<<M7<<", "<<mal<<std::endl;
-    // if (M7 > 0.025 && M7 < 0.052 && mal > 2.2 && mal < 4.3){
     if (M7 > 0.017 && M7 < 0.052 && mal > 1.2 && mal < 4.3){
         // std::cout<<M7<<", "<<mal<<std::endl;
         return true;
@@ -265,15 +245,15 @@ int main(int argc, char** argv )
 
     // progowanie
     cv::Mat mask = hsvTresholding(hsv, 20, 31, 95, 255);//(hsv, 21, 30, 100, 255);
-    cv::imshow("mask", mask);
+    // cv::imshow("mask", mask);
 
     cv::Mat red_mask = hsvTresholding(hsv, 174, 15, 88, 255);//(hsv, 174, 15, 93, 255);
-    cv::imshow("red_mask.jpg", red_mask);
+    // cv::imshow("red_mask.jpg", red_mask);
 
     // usuniecie szumow
     int kernel = 3;
     cv::Mat dst = rankFilter(mask, kernel, kernel*kernel/2);
-    cv::imshow("rankFilter.jpg", dst);
+    // cv::imshow("rankFilter.jpg", dst);
     
     // segmentacja
     int component;
@@ -285,31 +265,25 @@ int main(int argc, char** argv )
     // std::cout<<"found components: "<<objects.size()<<std::endl;
             
     for(cv::Mat obj : objects){
-        // isMetroYellowBackground(obj);
-        // cv::imshow("obj", obj);
-        // cv::waitKey(0);
         if (isMetroYellowBackground(obj)){
             // czy na masce czerwonego jest w tym miejscu czerwone M?
             int* points = get_surrounding_box(obj);
             cv::Point pt1 = cv::Point(points[0], points[1]);
             cv::Point pt2 = cv::Point(points[2], points[3]);
             
-            // cv::imshow("yellow", obj(cv::Rect(pt1, pt2)));
-            // std::cout<<"[0]"<<points[0]<<", [1]"<< points[1]
-            // <<", [2]"<<points[2]<<", [3]"<< points[3]<<std::endl;
-            
             cv::Mat redM = red_mask(cv::Rect(pt1, pt2));
             float sum = pole(obj)+pole(redM);
             float elipse = 3.14*(points[2]-points[0])/2*(points[3]-points[1])/2;
 
-            // cv::imshow("red", redM);
-            if (fabs(1.0 - elipse/sum) < 0.4 && fabs(1.0 - float(pole(obj))/float(pole(redM))) < 3){
+            if (fabs(1.0 - elipse/sum) < 0.26 && fabs(1.0 - float(pole(obj))/float(pole(redM))) < 3){
                 std::cout<<"pole zolty:"<<pole(obj)
                     <<", pole czerwone:"<<pole(redM)
                     <<", sum:"<<sum
                     <<", pole elipsy:"<<elipse
                     <<", diff:"<<elipse/sum
-                    <<", ->"<<float(pole(obj))/float(pole(redM))
+                    <<std::endl
+                    <<", ->"<<fabs(1.0 - elipse/sum)
+                    <<", ->"<<fabs(1.0 - float(pole(obj))/float(pole(redM)))
                     <<std::endl;
                 draw_rect(image, points[0], points[1], points[2], points[3], cv::Vec3b(0,255,0));
                 cv::imshow("metro.jpg", obj);
@@ -318,11 +292,6 @@ int main(int argc, char** argv )
         }
     }
     cv::imshow("image.jpg", image);
-
-
-
-    // cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE );
-    // cv::imshow("Display Image", object1);
 
     cv::waitKey(0);
 
