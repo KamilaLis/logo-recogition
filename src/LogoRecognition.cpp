@@ -116,8 +116,8 @@ void draw_rect(cv::Mat& I, int min_x, int min_y, int max_x, int max_y,
 
 int* get_surrounding_box(const cv::Mat& I){
 	int max_x = 0, max_y = 0;
-	int min_x = I.rows;
-	int min_y = I.cols;
+	int min_x = I.cols;
+	int min_y = I.rows;
 	for (int i = 0; i < I.rows; ++i)
 		for (int j = 0; j < I.cols; ++j)
 			if (I.at<uchar>(i, j) == 255){
