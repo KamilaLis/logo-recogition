@@ -265,15 +265,15 @@ int main(int argc, char** argv )
 
     // progowanie
     cv::Mat mask = hsvTresholding(hsv, 20, 31, 95, 255);//(hsv, 21, 30, 100, 255);
-    // cv::imshow("mask", mask);
+    cv::imshow("mask", mask);
 
     cv::Mat red_mask = hsvTresholding(hsv, 174, 15, 88, 255);//(hsv, 174, 15, 93, 255);
-    // cv::imshow("red_mask", red_mask);
+    cv::imshow("red_mask.jpg", red_mask);
 
     // usuniecie szumow
     int kernel = 3;
     cv::Mat dst = rankFilter(mask, kernel, kernel*kernel/2);
-    // cv::imshow("rankFilter", dst);
+    cv::imshow("rankFilter.jpg", dst);
     
     // segmentacja
     int component;
@@ -309,15 +309,15 @@ int main(int argc, char** argv )
                     <<", sum:"<<sum
                     <<", pole elipsy:"<<elipse
                     <<", diff:"<<elipse/sum
-                    <<", ->"<<fabs(1.0 - float(pole(obj))/float(pole(redM)))
+                    <<", ->"<<float(pole(obj))/float(pole(redM))
                     <<std::endl;
                 draw_rect(image, points[0], points[1], points[2], points[3], cv::Vec3b(0,255,0));
-                cv::imshow("metro", obj);
+                cv::imshow("metro.jpg", obj);
                 cv::waitKey(0);
             }
         }
     }
-    cv::imshow(argv[1], image);
+    cv::imshow("image.jpg", image);
 
 
 
